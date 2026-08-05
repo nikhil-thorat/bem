@@ -6,7 +6,7 @@ compile:
 	clang ./src/mouth.c -o mouth
 
 run:
-	brain 8080 8081
+	./brain 8080 8081
 
 clean:
 	rm -r ./system_*
