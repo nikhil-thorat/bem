@@ -3,7 +3,7 @@
 A system is consists of three processes
 - **Ear** (Listens for incoming messages)
 - **Brain** (Processes the message)
-- **Mouth** (Sends message to another process)
+- **Mouth** (Sends message to another system)
 
 ## How the System works
 
@@ -20,7 +20,7 @@ The Ear process is responsible for listening for incoming messages on specified 
 The Brain process is responsible for creating *ear* and *mouth* process and reading/writing to files that are used for communicating between these processes. We use *semaphores* for file synchronization as it is required to know whether if we can read/write to a file.
 
 2. **Mouth**
-The Mouth process is responsible for reading message from the *brain_to_mouth* file and sending that message to specified port in the arguments.
+The Mouth process is responsible for reading message from the *brain_to_mouth* file and sending that message to specified **port** in the arguments.
 
 ## How to Run
 
