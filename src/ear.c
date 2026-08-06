@@ -39,6 +39,9 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
+    /*
+     * Opening ear_to_brain file for communication.
+     */
     char filepath[64];
     snprintf(filepath, sizeof(filepath), "%s/ear_to_brain", argv[2]);
 
@@ -49,10 +52,14 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
+    /*
+     * Attaching to the ebsem semaphore created by
+     * brain process.
+     */
     char sem[64];
     snprintf(sem, sizeof(sem), "%s_ebsem", argv[2]);
 
-    sem_t *eb_sem = sem_open(sem, O_CREAT, 0664, 0);
+    sem_t *eb_sem = sem_open(sem, 0);
     if (eb_sem == SEM_FAILED)
     {
         perror("ear sem_open system call failed");
@@ -64,6 +71,10 @@ int main(int argc, char *argv[])
 
     while (1)
     {
+        /*
+         * Blocking call, wait until we receive any
+         * message on specified port.
+         */
         int bytes_received =
             recvfrom(sockfd, (char *)buffer, BUFFER_SIZE - 1, 0, (struct sockaddr *)&peer_addr, &peer_addr_len);
         if (bytes_received == -1)
@@ -75,11 +86,15 @@ int main(int argc, char *argv[])
 
         printf("[EAR] : RECEIVED %d BYTES\n", bytes_received);
 
+        /*
+         * Similar to brain processes, we need
+         * to overwrite the file.
+         */
         rewind(ear_brain);
-        int bytes_written = fwrite(buffer, sizeof(char), strlen(buffer), ear_brain);
+        int bytes_written = fwrite(buffer, sizeof(char), bytes_received, ear_brain);
 
-        ftruncate(fileno(ear_brain), bytes_written);
         fflush(ear_brain);
+        ftruncate(fileno(ear_brain), bytes_written);
 
         if (bytes_written != strlen(buffer))
         {
@@ -89,6 +104,10 @@ int main(int argc, char *argv[])
 
         printf("[EAR] : WROTE %d BYTES\n", bytes_written);
 
+        /*
+         * Singals brain process to continue it's
+         * execution.
+         */
         sem_post(eb_sem);
 
         if (strncmp(buffer, "exit", 4) == 0)
@@ -97,9 +116,17 @@ int main(int argc, char *argv[])
         }
     }
 
+    /*
+     * Closing files and sockfd.
+     */
     fclose(ear_brain);
     close(sockfd);
+
+    /*
+     * Unlinking and closing semaphores.
+     */
     sem_unlink((const char *)eb_sem);
+    sem_close(eb_sem);
 
     puts("[EAR] : QUITTING");
 

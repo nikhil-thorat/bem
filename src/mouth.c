@@ -29,11 +29,19 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
+    /*
+     * Opening brain_to_mouth file for reading
+     * messages.
+     */
     char filepath[64];
     snprintf(filepath, sizeof(filepath), "%s/brain_to_mouth", argv[2]);
 
     FILE *brain_mouth;
 
+    /*
+     * Attaching to bmsem semaphore created
+     * by brain process.
+     */
     char sem[64];
     snprintf(sem, sizeof(sem), "%s_bmsem", argv[2]);
 
@@ -49,6 +57,10 @@ int main(int argc, char *argv[])
 
     while (1)
     {
+        /*
+         * Blocking call, wait until brain process
+         * signals to continue further execution.
+         */
         sem_wait(bm_sem);
 
         brain_mouth = fopen(filepath, "rb");
@@ -58,15 +70,24 @@ int main(int argc, char *argv[])
             return EXIT_FAILURE;
         }
 
+        /*
+         * Reading message from brain.
+         */
         int bytes_read = fread(buffer, sizeof(char), BUFFER_SIZE, brain_mouth);
         if (bytes_read == -1)
         {
             perror("mouth fread system call failed");
             return EXIT_FAILURE;
         }
+        buffer[bytes_read] = '\0';
 
         printf("[MOUTH] : READ %d BYTES\n", bytes_read);
+        printf("[MOUTH] : %s", buffer);
 
+        /*
+         * Sending message to specified
+         * port.
+         */
         int bytes_sent =
             sendto(sockfd, (char *)buffer, bytes_read, 0, (const struct sockaddr *)&peer_addr, peer_addr_len);
         if (bytes_sent == -1)
@@ -85,7 +106,12 @@ int main(int argc, char *argv[])
     }
 
     close(sockfd);
+
+    /*
+     * Unlinking and closing semaphores
+     */
     sem_unlink((const char *)bm_sem);
+    sem_close(bm_sem);
 
     puts("[MOUTH] : QUITTING");
 
