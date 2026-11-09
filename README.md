@@ -26,14 +26,15 @@ UI or another system
 
 - **`src/ui.c`** — Interactive UDP client. It repeatedly prompts for a message
   and a destination port, then sends the message to that port on localhost.
-  Enter `quit` or `exit` to send that command and close the UI.
+  Enter `exit` at the message prompt to close the UI locally without sending
+  anything.
 - **`src/ear.c`** — Listens on the system's UDP port. It writes each incoming
   message to `ear_to_brain` and signals the brain that the file is ready.
 - **`src/brain.c`** — Starts the ear and mouth processes, reads messages from
   `ear_to_brain`, and writes results to `brain_to_mouth`. It supports `add`,
   `sub`, `mul`, and `div` with two integer operands. A single number is passed
-  through as-is. Division produces a decimal result. `quit` and `exit` stop
-  the system without forwarding the command.
+  through as-is. Division produces a decimal result. `quit` stops the
+  receiving system and is not forwarded to the next system.
 - **`src/mouth.c`** — Waits for the brain to write a result, prints it, and
   sends it to the UDP port configured for the system. It does not send the
   internal quit marker.
@@ -85,13 +86,15 @@ In another terminal, start the UI:
 For example, enter:
 
 ```text
-Message (add/sub/mul/div or a number; quit to stop UI): add 2 3
+Message (add/sub/mul/div or a number; exit to close UI): add 2 3
 Destination port: 8080
 ```
 
 The brain calculates `2 + 3`, writes `5` to `brain_to_mouth`, and the mouth
-prints `5` and sends it to port `8081`. To stop this system, run `./ui` again,
-enter `quit`, and enter `8080`.
+prints `5` and sends it to port `8081`. To stop this system, enter `quit` at
+the UI prompt and enter `8080`. The UI continues prompting after sending
+`quit`; enter `exit` at a later message prompt to close the UI without sending
+a message.
 
 ## Run two connected systems
 
@@ -124,9 +127,11 @@ prints `20` and sends it to port `8082`. Since no system is listening on
 | `div 7 2` | `3.5` |
 | `5` | `5` (passed through) |
 | `quit` | Stops the receiving system; does not get sent onward |
+| `exit` in the UI | Closes the UI only; it is not sent to a system |
 
-`exit` is also accepted as an alias for `quit`. The UI accepts one message per
-prompt and continues running until `quit`, `exit`, or end-of-input.
+The UI accepts messages until `exit` or end-of-input. `quit` is a remote
+command: it stops the system listening on the selected port, while the UI
+remains available for more input.
 
 ## Useful commands
 

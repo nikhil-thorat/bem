@@ -21,11 +21,15 @@ int main(void)
     {
         struct sockaddr_in destination = {0};
 
-        printf("Message (add/sub/mul/div or a number; quit to stop UI): ");
+        printf("Message (add/sub/mul/div or a number; exit to close UI): ");
         fflush(stdout);
         if (fgets(message, sizeof(message), stdin) == NULL)
             break;
         message[strcspn(message, "\n")] = '\0';
+
+        /* Exit is local to the UI and is never sent to a system. */
+        if (strcmp(message, "exit") == 0)
+            break;
 
         printf("Destination port: ");
         fflush(stdout);
@@ -55,8 +59,6 @@ int main(void)
         }
         printf("Sent %zd bytes to port %ld.\n", sent, port);
 
-        if (strcmp(message, "quit") == 0 || strcmp(message, "exit") == 0)
-            break;
     }
 
     close(sockfd);
