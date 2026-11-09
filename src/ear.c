@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
          */
         sem_post(eb_sem);
 
-        if (strncmp(buffer, "exit", 4) == 0)
+        if (strcmp(buffer, "quit") == 0 || strcmp(buffer, "exit") == 0)
         {
             break;
         }

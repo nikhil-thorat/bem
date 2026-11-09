@@ -82,6 +82,14 @@ int main(int argc, char *argv[])
         buffer[bytes_read] = '\0';
 
         printf("[MOUTH] : READ %d BYTES\n", bytes_read);
+
+        /* Brain uses this internal marker to stop mouth without sending it. */
+        if (strcmp(buffer, "quit") == 0 || strcmp(buffer, "exit") == 0)
+        {
+            fclose(brain_mouth);
+            break;
+        }
+
         printf("[MOUTH] : %s", buffer);
 
         /*
@@ -99,10 +107,6 @@ int main(int argc, char *argv[])
         printf("[MOUTH] : SENT %d BYTES\n", bytes_sent);
 
         fclose(brain_mouth);
-        if (strncmp(buffer, "exit", 4) == 0)
-        {
-            break;
-        }
     }
 
     close(sockfd);
